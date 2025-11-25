@@ -8,6 +8,8 @@ import FlappyCat from "./pages/FlappyCat";
 import Othello from "./pages/Othello";
 import Sokoban from "./pages/Sokoban";
 import SnakeCat from "./pages/SnakeCat";
+import PacmanHamster from "./pages/PacmanHamster";
+import Cat2048 from "./pages/Cat2048";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/othello" element={<Othello />} />
           <Route path="/sokoban" element={<Sokoban />} />
           <Route path="/snake-cat" element={<SnakeCat />} />
+          <Route path="/pacman-hamster" element={<PacmanHamster />} />
+          <Route path="/cat-2048" element={<Cat2048 />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
