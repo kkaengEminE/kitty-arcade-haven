@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { saveScore, getScores } from "@/lib/leaderboard";
 
 const FlappyCat = () => {
   const [gameStarted, setGameStarted] = useState(false);
@@ -10,6 +11,7 @@ const FlappyCat = () => {
   const [velocity, setVelocity] = useState(0);
   const [distance, setDistance] = useState(0);
   const [pipes, setPipes] = useState<{ x: number; gapY: number }[]>([]);
+  const leaderboard = getScores("flappy_cat");
 
   const GRAVITY = 0.6;
   const JUMP_STRENGTH = -10;
@@ -56,6 +58,7 @@ const FlappyCat = () => {
         const newY = y + velocity;
         if (newY < 0 || newY > 550) {
           setGameOver(true);
+          saveScore("flappy_cat", Math.floor(distance));
           return y;
         }
         return newY;
@@ -84,6 +87,7 @@ const FlappyCat = () => {
             (catY < pipe.gapY || catY + CAT_SIZE > pipe.gapY + PIPE_GAP)
           ) {
             setGameOver(true);
+            saveScore("flappy_cat", Math.floor(distance));
           }
         });
 
@@ -154,13 +158,27 @@ const FlappyCat = () => {
             {/* Game Over Overlay */}
             {gameOver && (
               <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                <div className="text-center bg-card p-8 rounded-2xl border-4 border-primary animate-bounce-in">
+                <div className="text-center bg-card p-8 rounded-2xl border-4 border-primary animate-bounce-in max-w-md">
                   <h2 className="text-4xl font-bold mb-4 text-foreground">
                     게임 종료! 😿
                   </h2>
-                  <p className="text-2xl mb-6 text-muted-foreground">
+                  <p className="text-2xl mb-4 text-muted-foreground">
                     총 거리: {Math.floor(distance)}m
                   </p>
+                  <div className="mb-6 text-left">
+                    <h3 className="text-lg font-bold mb-2 text-foreground">순위표 🏆</h3>
+                    <div className="space-y-1">
+                      {leaderboard.map((entry, idx) => (
+                        <div key={idx} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{idx + 1}위</span>
+                          <span className="font-bold text-foreground">{entry.score}m</span>
+                        </div>
+                      ))}
+                      {leaderboard.length === 0 && (
+                        <p className="text-sm text-muted-foreground">아직 기록이 없습니다</p>
+                      )}
+                    </div>
+                  </div>
                   <Button
                     onClick={resetGame}
                     className="bg-primary text-primary-foreground font-bold text-xl px-8 py-6"

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
+import { saveScore, getScores } from "@/lib/leaderboard";
 
 type Position = { x: number; y: number };
 type Direction = "UP" | "DOWN" | "LEFT" | "RIGHT" | null;
@@ -30,6 +31,7 @@ const PacmanHamster = () => {
   const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [difficulty, setDifficulty] = useState(3);
+  const leaderboard = getScores("pacman_hamster");
 
   const initializeGame = useCallback(() => {
     // Create walls
@@ -189,6 +191,7 @@ const PacmanHamster = () => {
 
       if (remaining.length === 0) {
         setGameOver(true);
+        saveScore("pacman_hamster", score + 10);
       }
 
       return remaining;
@@ -199,6 +202,7 @@ const PacmanHamster = () => {
     );
     if (collision) {
       setGameOver(true);
+      saveScore("pacman_hamster", score);
     }
   }, [hamster, ghosts, gameStarted]);
 
@@ -331,7 +335,21 @@ const PacmanHamster = () => {
             <h2 className="text-3xl font-bold text-primary">
               {seeds.length === 0 ? "🎉 승리!" : "💥 게임 오버!"}
             </h2>
-            <p className="text-xl text-foreground">최종 점수: {score}</p>
+            <p className="text-xl text-foreground mb-4">최종 점수: {score}</p>
+            <div className="text-left bg-muted/50 p-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-2 text-foreground">순위표 🏆</h3>
+              <div className="space-y-1">
+                {leaderboard.map((entry, idx) => (
+                  <div key={idx} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{idx + 1}위</span>
+                    <span className="font-bold text-foreground">{entry.score}점</span>
+                  </div>
+                ))}
+                {leaderboard.length === 0 && (
+                  <p className="text-sm text-muted-foreground">아직 기록이 없습니다</p>
+                )}
+              </div>
+            </div>
             <Button onClick={handleRestart} className="text-lg px-8 py-6">
               다시 시작하기 🔄
             </Button>
