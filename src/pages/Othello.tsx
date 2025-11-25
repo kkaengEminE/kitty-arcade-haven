@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { saveScore, getScores } from "@/lib/leaderboard";
 
 type Cell = "black" | "white" | null;
 type Board = Cell[][];
@@ -11,6 +12,7 @@ const Othello = () => {
   const [board, setBoard] = useState<Board>(initializeBoard());
   const [currentPlayer, setCurrentPlayer] = useState<"black" | "white">("black");
   const [gameOver, setGameOver] = useState(false);
+  const leaderboard = getScores("othello");
 
   function initializeBoard(): Board {
     const newBoard: Board = Array(8)
@@ -116,6 +118,8 @@ const Othello = () => {
     if (!hasValidMove) {
       setGameOver(true);
       const counts = countPieces(currentBoard);
+      const winnerScore = Math.max(counts.black, counts.white);
+      saveScore("othello", winnerScore);
       toast.success(
         `게임 종료! 흑: ${counts.black}, 백: ${counts.white}`,
         { duration: 5000 }
@@ -192,15 +196,29 @@ const Othello = () => {
           </div>
 
           {gameOver && (
-            <div className="mt-6 text-center bg-card p-6 rounded-xl border-2 border-primary">
-              <h3 className="text-2xl font-bold mb-2">게임 종료!</h3>
-              <p className="text-xl">
+            <div className="mt-6 text-center bg-card p-6 rounded-xl border-2 border-primary space-y-4">
+              <h3 className="text-2xl font-bold">게임 종료!</h3>
+              <p className="text-xl mb-4">
                 {counts.black > counts.white
                   ? "😺 검은 고양이 승리!"
                   : counts.white > counts.black
                   ? "😸 흰 고양이 승리!"
                   : "무승부!"}
               </p>
+              <div className="text-left bg-muted/50 p-4 rounded-lg">
+                <h3 className="text-lg font-bold mb-2 text-foreground">순위표 🏆</h3>
+                <div className="space-y-1">
+                  {leaderboard.map((entry, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{idx + 1}위</span>
+                      <span className="font-bold text-foreground">{entry.score}개</span>
+                    </div>
+                  ))}
+                  {leaderboard.length === 0 && (
+                    <p className="text-sm text-muted-foreground">아직 기록이 없습니다</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </Card>
