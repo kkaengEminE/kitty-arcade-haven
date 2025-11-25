@@ -235,15 +235,22 @@ const Cat2048 = () => {
           😺 고양이 2048
         </h1>
 
-        <div className="flex justify-between mb-6">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">점수</p>
-            <p className="text-2xl font-bold text-foreground">{score}</p>
+        <div className="flex justify-between mb-6 items-start">
+          <div className="flex gap-4">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">점수</p>
+              <p className="text-2xl font-bold text-foreground">{score}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">최고 점수</p>
+              <p className="text-2xl font-bold text-primary">{bestScore}</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">최고 점수</p>
-            <p className="text-2xl font-bold text-primary">{bestScore}</p>
-          </div>
+          {gameStarted && !gameOver && (
+            <Button onClick={startGame} variant="outline" size="sm">
+              🔄 다시 하기
+            </Button>
+          )}
         </div>
 
         {!gameStarted && (
