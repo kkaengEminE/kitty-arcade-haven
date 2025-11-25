@@ -35,6 +35,22 @@ const Index = () => {
       path: "/snake-cat",
       emoji: "😺",
       color: "from-green-400 to-emerald-400"
+    },
+    {
+      id: 5,
+      title: "🐹 팩맨 햄스터",
+      description: "해바라기씨를 먹고 고양이를 피하세요!",
+      path: "/pacman-hamster",
+      emoji: "🐹",
+      color: "from-yellow-400 to-amber-500"
+    },
+    {
+      id: 6,
+      title: "😺 고양이 2048",
+      description: "고양이를 합쳐서 2048을 만드세요!",
+      path: "/cat-2048",
+      emoji: "😺",
+      color: "from-purple-400 to-pink-400"
     }
   ];
 
