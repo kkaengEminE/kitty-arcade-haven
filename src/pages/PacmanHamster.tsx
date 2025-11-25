@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
 
 type Position = { x: number; y: number };
@@ -10,21 +11,57 @@ const GRID_SIZE = 20;
 const CELL_SIZE = 20;
 const INITIAL_GHOST_COUNT = 4;
 
+const SPEED_MAP: { [key: number]: number } = {
+  1: 250,
+  2: 200,
+  3: 150,
+  4: 100,
+  5: 75,
+};
+
 const PacmanHamster = () => {
   const navigate = useNavigate();
   const [hamster, setHamster] = useState<Position>({ x: 10, y: 10 });
   const [direction, setDirection] = useState<Direction>(null);
   const [seeds, setSeeds] = useState<Position[]>([]);
+  const [walls, setWalls] = useState<Position[]>([]);
   const [ghosts, setGhosts] = useState<Position[]>([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [difficulty, setDifficulty] = useState(3);
 
   const initializeGame = useCallback(() => {
+    // Create walls
+    const newWalls: Position[] = [];
+    
+    // Border walls
+    for (let i = 0; i < GRID_SIZE; i++) {
+      newWalls.push({ x: i, y: 0 });
+      newWalls.push({ x: i, y: GRID_SIZE - 1 });
+      newWalls.push({ x: 0, y: i });
+      newWalls.push({ x: GRID_SIZE - 1, y: i });
+    }
+    
+    // Internal walls
+    for (let i = 5; i < 15; i++) {
+      if (i !== 10) {
+        newWalls.push({ x: i, y: 5 });
+        newWalls.push({ x: i, y: 14 });
+        newWalls.push({ x: 5, y: i });
+        newWalls.push({ x: 14, y: i });
+      }
+    }
+    
+    setWalls(newWalls);
+    
+    const isWall = (x: number, y: number) => 
+      newWalls.some(wall => wall.x === x && wall.y === y);
+    
     const newSeeds: Position[] = [];
     for (let x = 0; x < GRID_SIZE; x++) {
       for (let y = 0; y < GRID_SIZE; y++) {
-        if (Math.random() > 0.7 && !(x === 10 && y === 10)) {
+        if (Math.random() > 0.7 && !(x === 10 && y === 10) && !isWall(x, y)) {
           newSeeds.push({ x, y });
         }
       }
@@ -88,17 +125,23 @@ const PacmanHamster = () => {
 
         switch (direction) {
           case "UP":
-            newY = Math.max(0, prev.y - 1);
+            newY = prev.y - 1;
             break;
           case "DOWN":
-            newY = Math.min(GRID_SIZE - 1, prev.y + 1);
+            newY = prev.y + 1;
             break;
           case "LEFT":
-            newX = Math.max(0, prev.x - 1);
+            newX = prev.x - 1;
             break;
           case "RIGHT":
-            newX = Math.min(GRID_SIZE - 1, prev.x + 1);
+            newX = prev.x + 1;
             break;
+        }
+
+        // Check wall collision
+        const hitWall = walls.some(wall => wall.x === newX && wall.y === newY);
+        if (hitWall) {
+          return prev;
         }
 
         return { x: newX, y: newY };
@@ -118,16 +161,19 @@ const PacmanHamster = () => {
             newY = ghost.y + Math.sign(dy);
           }
 
-          newX = Math.max(0, Math.min(GRID_SIZE - 1, newX));
-          newY = Math.max(0, Math.min(GRID_SIZE - 1, newY));
+          // Check wall collision for ghosts
+          const hitWall = walls.some(wall => wall.x === newX && wall.y === newY);
+          if (hitWall) {
+            return ghost;
+          }
 
           return { x: newX, y: newY };
         });
       });
-    }, 150);
+    }, SPEED_MAP[difficulty]);
 
     return () => clearInterval(gameLoop);
-  }, [gameStarted, gameOver, direction, hamster.x, hamster.y]);
+  }, [gameStarted, gameOver, direction, hamster.x, hamster.y, walls, difficulty]);
 
   useEffect(() => {
     if (!gameStarted) return;
@@ -174,8 +220,30 @@ const PacmanHamster = () => {
           🐹 팩맨 햄스터
         </h1>
         
-        <div className="mb-4 text-center">
+        <div className="mb-4 flex justify-between items-center">
           <p className="text-2xl font-bold text-foreground">점수: {score}</p>
+          {gameStarted && !gameOver && (
+            <Button onClick={handleRestart} variant="outline" size="sm">
+              🔄 다시 하기
+            </Button>
+          )}
+        </div>
+
+        <div className="mb-4 space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-foreground">
+              난이도: {difficulty}
+            </label>
+          </div>
+          <Slider
+            value={[difficulty]}
+            onValueChange={(value) => setDifficulty(value[0])}
+            min={1}
+            max={5}
+            step={1}
+            className="w-full"
+            disabled={gameStarted && !gameOver}
+          />
         </div>
 
         {!gameStarted && !gameOver && (
@@ -197,6 +265,21 @@ const PacmanHamster = () => {
               height: GRID_SIZE * CELL_SIZE,
             }}
           >
+            {walls.map((wall, idx) => (
+              <div
+                key={`wall-${idx}`}
+                className="absolute flex items-center justify-center"
+                style={{
+                  left: wall.x * CELL_SIZE,
+                  top: wall.y * CELL_SIZE,
+                  width: CELL_SIZE,
+                  height: CELL_SIZE,
+                }}
+              >
+                <span className="text-sm">🧊</span>
+              </div>
+            ))}
+
             {seeds.map((seed, idx) => (
               <div
                 key={`seed-${idx}`}
