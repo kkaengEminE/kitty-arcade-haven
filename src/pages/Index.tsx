@@ -51,6 +51,14 @@ const Index = () => {
       path: "/cat-2048",
       emoji: "😺",
       color: "from-purple-400 to-pink-400"
+    },
+    {
+      id: 7,
+      title: "🐹 햄스터 블록깨기",
+      description: "햄스터로 해바라기씨를 깨세요!",
+      path: "/arkanoid-hamster",
+      emoji: "🐹",
+      color: "from-orange-500 to-red-500"
     }
   ];
 
