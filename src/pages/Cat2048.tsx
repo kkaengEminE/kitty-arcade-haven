@@ -274,11 +274,16 @@ const Cat2048 = () => {
                 {row.map((cell, colIndex) => (
                   <div
                     key={`${rowIndex}-${colIndex}`}
-                    className={`w-20 h-20 flex items-center justify-center rounded-lg font-bold text-3xl ${getTileColor(
+                    className={`w-20 h-20 flex flex-col items-center justify-center rounded-lg font-bold ${getTileColor(
                       cell
                     )} transition-all duration-200`}
                   >
-                    {cell && CAT_EMOJIS[cell]}
+                    {cell && (
+                      <>
+                        <span className="text-3xl">{CAT_EMOJIS[cell]}</span>
+                        <span className="text-xs text-foreground/80 font-semibold">{cell}</span>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
