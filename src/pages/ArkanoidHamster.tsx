@@ -46,6 +46,7 @@ const ArkanoidHamster = () => {
   const bricksRef = useRef<Brick[]>([]);
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
+  const ballLaunchedRef = useRef(false);
 
   const CANVAS_WIDTH = 600;
   const CANVAS_HEIGHT = 500;
@@ -80,6 +81,7 @@ const ArkanoidHamster = () => {
       dy: -3, 
       radius: 8 
     };
+    ballLaunchedRef.current = false;
   };
 
   const startGame = () => {
@@ -123,12 +125,20 @@ const ArkanoidHamster = () => {
       paddleXRef.current = Math.max(0, Math.min(CANVAS_WIDTH - PADDLE_WIDTH, mouseX - PADDLE_WIDTH / 2));
     };
 
+    const handleClick = () => {
+      if (gameState === "playing" && !ballLaunchedRef.current) {
+        ballLaunchedRef.current = true;
+      }
+    };
+
     canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("click", handleClick);
 
     return () => {
       canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("click", handleClick);
     };
-  }, []);
+  }, [gameState]);
 
   useEffect(() => {
     if (gameState !== "playing") {
@@ -173,51 +183,72 @@ const ArkanoidHamster = () => {
       ctx.font = "16px Arial";
       ctx.fillText("🌻", ballRef.current.x - ballRef.current.radius, ballRef.current.y + ballRef.current.radius);
 
-      // Move ball
-      ballRef.current.x += ballRef.current.dx;
-      ballRef.current.y += ballRef.current.dy;
-
-      // Wall collision
-      if (ballRef.current.x + ballRef.current.radius > CANVAS_WIDTH || ballRef.current.x - ballRef.current.radius < 0) {
-        ballRef.current.dx *= -1;
-      }
-      if (ballRef.current.y - ballRef.current.radius < 0) {
-        ballRef.current.dy *= -1;
+      // If ball not launched, keep it on the paddle
+      if (!ballLaunchedRef.current) {
+        ballRef.current.x = paddleXRef.current + PADDLE_WIDTH / 2;
+        ballRef.current.y = CANVAS_HEIGHT - 60;
+      } else {
+        // Move ball
+        ballRef.current.x += ballRef.current.dx;
+        ballRef.current.y += ballRef.current.dy;
       }
 
-      // Hamster collision (success - ball bounces off hamsters)
-      const hamsterY = CANVAS_HEIGHT - 25;
-      const hamsterSize = 35;
-      const hamsterPositions = [
-        paddleXRef.current + 5,
-        paddleXRef.current + 40,
-        paddleXRef.current + 75
-      ];
-      
-      let hitHamster = false;
-      for (const hamsterX of hamsterPositions) {
-        if (
-          ballRef.current.y + ballRef.current.radius > hamsterY - hamsterSize / 2 &&
-          ballRef.current.y - ballRef.current.radius < hamsterY + hamsterSize / 2 &&
-          ballRef.current.x > hamsterX - hamsterSize / 2 &&
-          ballRef.current.x < hamsterX + hamsterSize / 2
-        ) {
-          ballRef.current.dy = Math.abs(ballRef.current.dy) * -1; // Bounce up
-          // Add angle based on which hamster was hit
-          const hitPos = (ballRef.current.x - paddleXRef.current) / PADDLE_WIDTH;
-          ballRef.current.dx = (hitPos - 0.5) * 6;
-          hitHamster = true;
-          break;
+      // Only process collisions if ball is launched
+      if (ballLaunchedRef.current) {
+        // Wall collision
+        if (ballRef.current.x + ballRef.current.radius > CANVAS_WIDTH || ballRef.current.x - ballRef.current.radius < 0) {
+          ballRef.current.dx *= -1;
         }
-      }
+        if (ballRef.current.y - ballRef.current.radius < 0) {
+          ballRef.current.dy *= -1;
+        }
 
-      // Cheese collision (failure - ball hits cheese instead of hamsters)
-      if (!hitHamster && ballRef.current.y + ballRef.current.radius > CANVAS_HEIGHT - PADDLE_HEIGHT) {
-        const cheeseZoneStart = paddleXRef.current - 15;
-        const cheeseZoneEnd = paddleXRef.current + PADDLE_WIDTH + 15;
+        // Hamster collision (success - ball bounces off hamsters)
+        const hamsterY = CANVAS_HEIGHT - 25;
+        const hamsterSize = 35;
+        const hamsterPositions = [
+          paddleXRef.current + 5,
+          paddleXRef.current + 40,
+          paddleXRef.current + 75
+        ];
         
-        if (ballRef.current.x > cheeseZoneStart && ballRef.current.x < cheeseZoneEnd) {
-          // Hit cheese - lose life
+        let hitHamster = false;
+        for (const hamsterX of hamsterPositions) {
+          if (
+            ballRef.current.y + ballRef.current.radius > hamsterY - hamsterSize / 2 &&
+            ballRef.current.y - ballRef.current.radius < hamsterY + hamsterSize / 2 &&
+            ballRef.current.x > hamsterX - hamsterSize / 2 &&
+            ballRef.current.x < hamsterX + hamsterSize / 2
+          ) {
+            ballRef.current.dy = Math.abs(ballRef.current.dy) * -1; // Bounce up
+            // Add angle based on which hamster was hit
+            const hitPos = (ballRef.current.x - paddleXRef.current) / PADDLE_WIDTH;
+            ballRef.current.dx = (hitPos - 0.5) * 6;
+            hitHamster = true;
+            break;
+          }
+        }
+
+        // Cheese collision (failure - ball hits cheese instead of hamsters)
+        if (!hitHamster && ballRef.current.y + ballRef.current.radius > CANVAS_HEIGHT - PADDLE_HEIGHT) {
+          const cheeseZoneStart = paddleXRef.current - 15;
+          const cheeseZoneEnd = paddleXRef.current + PADDLE_WIDTH + 15;
+          
+          if (ballRef.current.x > cheeseZoneStart && ballRef.current.x < cheeseZoneEnd) {
+            // Hit cheese - lose life
+            const newLives = lives - 1;
+            setLives(newLives);
+            if (newLives <= 0) {
+              setGameState("gameOver");
+              return;
+            } else {
+              resetBall();
+            }
+          }
+        }
+
+        // Ball falls off
+        if (ballRef.current.y - ballRef.current.radius > CANVAS_HEIGHT) {
           const newLives = lives - 1;
           setLives(newLives);
           if (newLives <= 0) {
@@ -227,42 +258,30 @@ const ArkanoidHamster = () => {
             resetBall();
           }
         }
-      }
 
-      // Ball falls off
-      if (ballRef.current.y - ballRef.current.radius > CANVAS_HEIGHT) {
-        const newLives = lives - 1;
-        setLives(newLives);
-        if (newLives <= 0) {
-          setGameState("gameOver");
-          return;
-        } else {
-          resetBall();
-        }
-      }
-
-      // Brick collision
-      let allBricksCleared = true;
-      bricksRef.current.forEach((brick) => {
-        if (brick.visible) {
-          allBricksCleared = false;
-          if (
-            ballRef.current.x > brick.x &&
-            ballRef.current.x < brick.x + brick.width &&
-            ballRef.current.y > brick.y &&
-            ballRef.current.y < brick.y + brick.height
-          ) {
-            brick.visible = false;
-            ballRef.current.dy *= -1;
+        // Brick collision
+        let allBricksCleared = true;
+        bricksRef.current.forEach((brick) => {
+          if (brick.visible) {
+            allBricksCleared = false;
+            if (
+              ballRef.current.x > brick.x &&
+              ballRef.current.x < brick.x + brick.width &&
+              ballRef.current.y > brick.y &&
+              ballRef.current.y < brick.y + brick.height
+            ) {
+              brick.visible = false;
+              ballRef.current.dy *= -1;
+            }
           }
-        }
-      });
+        });
 
-      if (allBricksCleared) {
-        const pauseStart = Date.now();
-        pausedTimeRef.current += Date.now() - pauseStart;
-        setGameState("stageClear");
-        return;
+        if (allBricksCleared) {
+          const pauseStart = Date.now();
+          pausedTimeRef.current += Date.now() - pauseStart;
+          setGameState("stageClear");
+          return;
+        }
       }
 
       // Update elapsed time
