@@ -157,9 +157,17 @@ const ArkanoidHamster = () => {
         }
       });
 
-      // Draw paddle (hamster)
-      ctx.font = "40px Arial";
-      ctx.fillText("🐹", paddleXRef.current, CANVAS_HEIGHT - 10);
+      // Draw cheese platform (wider than hamsters)
+      ctx.font = "50px Arial";
+      ctx.fillText("🧀", paddleXRef.current - 15, CANVAS_HEIGHT - 5);
+      ctx.fillText("🧀", paddleXRef.current + 35, CANVAS_HEIGHT - 5);
+      ctx.fillText("🧀", paddleXRef.current + 85, CANVAS_HEIGHT - 5);
+      
+      // Draw 3 hamsters on top of cheese
+      ctx.font = "35px Arial";
+      ctx.fillText("🐹", paddleXRef.current + 5, CANVAS_HEIGHT - 25);
+      ctx.fillText("🐹", paddleXRef.current + 40, CANVAS_HEIGHT - 25);
+      ctx.fillText("🐹", paddleXRef.current + 75, CANVAS_HEIGHT - 25);
 
       // Draw ball (sunflower seed)
       ctx.font = "16px Arial";
@@ -177,16 +185,48 @@ const ArkanoidHamster = () => {
         ballRef.current.dy *= -1;
       }
 
-      // Paddle collision
-      if (
-        ballRef.current.y + ballRef.current.radius > CANVAS_HEIGHT - PADDLE_HEIGHT &&
-        ballRef.current.x > paddleXRef.current &&
-        ballRef.current.x < paddleXRef.current + PADDLE_WIDTH
-      ) {
-        ballRef.current.dy *= -1;
-        // Add angle based on hit position
-        const hitPos = (ballRef.current.x - paddleXRef.current) / PADDLE_WIDTH;
-        ballRef.current.dx = (hitPos - 0.5) * 6;
+      // Hamster collision (success - ball bounces off hamsters)
+      const hamsterY = CANVAS_HEIGHT - 25;
+      const hamsterSize = 35;
+      const hamsterPositions = [
+        paddleXRef.current + 5,
+        paddleXRef.current + 40,
+        paddleXRef.current + 75
+      ];
+      
+      let hitHamster = false;
+      for (const hamsterX of hamsterPositions) {
+        if (
+          ballRef.current.y + ballRef.current.radius > hamsterY - hamsterSize / 2 &&
+          ballRef.current.y - ballRef.current.radius < hamsterY + hamsterSize / 2 &&
+          ballRef.current.x > hamsterX - hamsterSize / 2 &&
+          ballRef.current.x < hamsterX + hamsterSize / 2
+        ) {
+          ballRef.current.dy = Math.abs(ballRef.current.dy) * -1; // Bounce up
+          // Add angle based on which hamster was hit
+          const hitPos = (ballRef.current.x - paddleXRef.current) / PADDLE_WIDTH;
+          ballRef.current.dx = (hitPos - 0.5) * 6;
+          hitHamster = true;
+          break;
+        }
+      }
+
+      // Cheese collision (failure - ball hits cheese instead of hamsters)
+      if (!hitHamster && ballRef.current.y + ballRef.current.radius > CANVAS_HEIGHT - PADDLE_HEIGHT) {
+        const cheeseZoneStart = paddleXRef.current - 15;
+        const cheeseZoneEnd = paddleXRef.current + PADDLE_WIDTH + 15;
+        
+        if (ballRef.current.x > cheeseZoneStart && ballRef.current.x < cheeseZoneEnd) {
+          // Hit cheese - lose life
+          const newLives = lives - 1;
+          setLives(newLives);
+          if (newLives <= 0) {
+            setGameState("gameOver");
+            return;
+          } else {
+            resetBall();
+          }
+        }
       }
 
       // Ball falls off
