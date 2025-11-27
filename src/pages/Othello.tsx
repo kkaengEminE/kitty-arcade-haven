@@ -158,10 +158,10 @@ const Othello = () => {
           </Link>
           <div className="flex gap-4">
             <div className="text-xl font-bold">
-              😺 흑: {counts.black}
+              🐱 고양이: {counts.black}
             </div>
             <div className="text-xl font-bold">
-              😸 백: {counts.white}
+              🐹 햄스터: {counts.white}
             </div>
           </div>
           <Button onClick={resetGame} className="bg-primary font-bold">
@@ -172,7 +172,7 @@ const Othello = () => {
         <Card className="p-4 md:p-8 bg-card/90 backdrop-blur-sm border-4 border-primary">
           <div className="mb-4 text-center">
             <h2 className="text-2xl font-bold">
-              현재 차례: {currentPlayer === "black" ? "😺 검은 고양이" : "😸 흰 고양이"}
+              현재 차례: {currentPlayer === "black" ? "🐱 고양이" : "🐹 햄스터"}
             </h2>
           </div>
 
@@ -188,8 +188,8 @@ const Othello = () => {
                       : ""
                   }`}
                 >
-                  {cell === "black" && "😺"}
-                  {cell === "white" && "😸"}
+                  {cell === "black" && "🐱"}
+                  {cell === "white" && "🐹"}
                 </button>
               ))
             )}
@@ -200,9 +200,9 @@ const Othello = () => {
               <h3 className="text-2xl font-bold">게임 종료!</h3>
               <p className="text-xl mb-4">
                 {counts.black > counts.white
-                  ? "😺 검은 고양이 승리!"
+                  ? "🐱 고양이 승리!"
                   : counts.white > counts.black
-                  ? "😸 흰 고양이 승리!"
+                  ? "🐹 햄스터 승리!"
                   : "무승부!"}
               </p>
               <div className="text-left bg-muted/50 p-4 rounded-lg">
