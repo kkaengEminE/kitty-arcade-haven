@@ -14,10 +14,10 @@ const Index = () => {
     },
     {
       id: 2,
-      title: "⚫⚪캣 오셀로",
-      description: "검은 고양이 vs 흰 고양이 대결!",
+      title: "🐱🐹 캣 오셀로",
+      description: "고양이 vs 햄스터 대결!",
       path: "/othello",
-      emoji: "🐈",
+      emoji: "🐱",
       color: "from-gray-700 to-gray-300"
     },
     {
